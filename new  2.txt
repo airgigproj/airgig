@@ -1,0 +1,460 @@
+  
+ Subscribe to news from Isocra
+« People are like lawnmowers?JasperException: Failed to load or instantiate TagExtraInfo »
+Table Drag and Drop JQuery plugin
+
+
+
+I’ve been using JQuery for a while now and really agree with its tag line that it’s the “The Write Less, Do More, JavaScript Library”. We’ve also got this code for dragging and dropping table rows that has proved very popular, so it seemed natural to combine the two and wrap up the table drag and drop as a JQuery plugin.
+
+Why have another plugin?
+Dragging and dropping rows within a table can’t be handled by general purpose drag and drop utilities for a number of reasons, not least because you need to move the whole row, not just the cell that receives the mouse events. Re-parenting the row also requires specific code. Sadly also, effects like fadeIn and fadeOut don’t work well with table rows on all browsers, so we have to go for simpler effects.
+
+What does it do?
+This TableDnD plugin allows the user to reorder rows within a table, for example if they represent an ordered list (tasks by priority for example). Individual rows can be marked as non-draggable and/or non-droppable (so other rows can’t be dropped onto them). Rows can have as many cells as necessary and the cells can contain form elements.
+
+How do I use it?
+Download Download jQuery (version 1.2 or above), then the TableDnD plugin (current version 0.5).
+Reference both scripts in your HTML page in the normal way.
+In true jQuery style, the typical way to initialise the tabes is in the $(document).ready function. Use a selector to select your table and then call tableDnD(). You can optionally specify a set of properties (described below).
+1	One	some text
+2	Two	some text
+3	Three	some text
+4	Four	some text
+5	Five	some text
+6	Six	some text
+The HTML for the table is very straight forward (no Javascript, pure HTML):
+
+<table id="table-1" cellspacing="0" cellpadding="2">
+    <tr id="1"><td>1</td><td>One</td><td>some text</td></tr>
+    <tr id="2"><td>2</td><td>Two</td><td>some text</td></tr>
+    <tr id="3"><td>3</td><td>Three</td><td>some text</td></tr>
+    <tr id="4"><td>4</td><td>Four</td><td>some text</td></tr>
+    <tr id="5"><td>5</td><td>Five</td><td>some text</td></tr>
+    <tr id="6"><td>6</td><td>Six</td><td>some text</td></tr>
+</table>
+To add in the “draggability” all we need to do is add a line to the $(document).ready(...) function
+as follows:
+
+<script type="text/javascript">
+$(document).ready(function() {
+    // Initialise the table
+    $("#table-1").tableDnD();
+});
+</script>
+In the example above we’re not setting any parameters at all so we get the default settings. There are a number
+of parameters you can set in order to control the look and feel of the table and also to add custom behaviour
+on drag or on drop. The parameters are specified as a map in the usual way and are described below:
+
+onDragStyle
+This is the style that is assigned to the row during drag. There are limitations to the styles that can be
+associated with a row (such as you can’t assign a border—well you can, but it won’t be
+displayed). (So instead consider using onDragClass.) The CSS style to apply is specified as
+a map (as used in the jQuery css(...) function).
+onDropStyle
+This is the style that is assigned to the row when it is dropped. As for onDragStyle, there are limitations
+to what you can do. Also this replaces the original style, so again consider using onDragClass which
+is simply added and then removed on drop.
+onDragClass
+This class is added for the duration of the drag and then removed when the row is dropped. It is more
+flexible than using onDragStyle since it can be inherited by the row cells and other content. The default
+is class is tDnD_whileDrag. So to use the default, simply customise this CSS class in your
+stylesheet.
+onDrop
+Pass a function that will be called when the row is dropped. The function takes 2 parameters: the table
+and the row that was dropped. You can work out the new order of the rows by using
+table.tBodies[0].rows.
+onDragStart
+Pass a function that will be called when the user starts dragging. The function takes 2 parameters: the
+table and the row which the user has started to drag.
+scrollAmount
+This is the number of pixels to scroll if the user moves the mouse cursor to the top or bottom of the
+window. The page should automatically scroll up or down as appropriate (tested in IE6, IE7, Safari, FF2,
+FF3 beta)
+This second table has has an onDrop function applied as well as an onDragClass. The javascript to set this up is
+as follows:
+
+$(document).ready(function() {
+
+	// Initialise the first table (as before)
+	$("#table-1").tableDnD();
+
+	// Make a nice striped effect on the table
+	$("#table-2 tr:even').addClass('alt')");
+
+	// Initialise the second table specifying a dragClass and an onDrop function that will display an alert
+	$("#table-2").tableDnD({
+	    onDragClass: "myDragClass",
+	    onDrop: function(table, row) {
+            var rows = table.tBodies[0].rows;
+            var debugStr = "Row dropped was "+row.id+". New order: ";
+            for (var i=0; i<rows.length; i++) {
+                debugStr += rows[i].id+" ";
+            }
+	        $(#debugArea).html(debugStr);
+	    },
+		onDragStart: function(table, row) {
+			$(#debugArea).html("Started dragging row "+row.id);
+		}
+	});
+});
+ 
+1	One	
+2	Two	
+3	Three	
+4	Four	
+5	Five	
+6	Six	
+7	Seven	
+8	Eight	
+9	Nine	
+10	Ten	
+11	Eleven	
+12	Twelve	
+13	Thirteen	
+14	Fourteen	
+What to do afterwards?
+Generally once the user has dropped a row, you need to inform the server of the new order. To do this, we’ve
+added a method called serialise(). It takes no parameters but knows the current table from the
+context. The method returns a string of the form tableId[]=rowId1&tableId[]=rowId2&tableId[]=rowId3...
+You can then use this as part of an Ajax load.
+
+This third table demonstrates calling the serialise function inside onDrop (as shown below). It also
+demonstrates the “nodrop” class on row 3 and “nodrag” class on row 5, so you can’t pick up row 5 and
+you can’t drop any row on row 3 (but you can drag it).
+
+    $('#table-3').tableDnD({
+        onDrop: function(table, row) {
+            alert($.tableDnD.serialize());
+        }
+    });
+Ajax result
+Drag and drop in this table to test out serialise and using JQuery.load()
+
+1	One	
+2	Two	
+3	Three (Can’t drop on this row)	
+4	Four	
+5	Five (Can’t drag this row)	
+6	Six	
+This table has multiple TBODYs. The functionality isn’t quite working properly. You can only drag the rows inside their
+own TBODY, you can’t drag them outside it. Now this might or might not be what you want, but unfortunately if you then drop a row outside its TBODY you get a Javascript error because inserting after a sibling doesn’t work. This will be fixed in the next version. The header rows all have the classes “nodrop” and “nodrag” so that they can’t be dragged or dropped on.
+
+H1	H2	H3
+4.1	One	
+4.2	Two	
+4.3	Three	
+4.4	Four	
+4.5	Five	
+4.6	Six	
+H1	H2	H3
+5.1	One	
+5.2	Two	
+5.3	Three	
+5.4	Four	
+5.5	Five	
+5.6	Six	
+H1	H2	H3
+6.1	One	
+6.2	Two	
+6.3	Three	
+6.4	Four	
+6.5	Five	
+6.6	Six	
+The following table demonstrates the use of the default regular expression. The rows have IDs of the
+form table5-row-1, table5-row-2, etc., but the regular expression is /[^\-]*$/ (this is the same
+as used in the NestedSortable plugin for consistency).
+This removes everything before and including the last hyphen, so the serialised string just has 1, 2, 3 etc.
+You can replace the regular expression by setting the serializeRegexp option, you can also just set it
+to null to stop this behaviour.
+
+    $('#table-5').tableDnD({
+        onDrop: function(table, row) {
+            alert($('#table-5').tableDnDSerialize());
+        },
+        dragHandle: "dragHandle"
+    });
+ 	1	One	some text
+ 	2	Two	some text
+ 	3	Three	some text
+ 	4	Four	some text
+ 	5	Five	some text
+ 	6	Six	some text
+In fact you will notice that I have also set the dragHandle on this table. This has two effects: firstly only
+the cell with the drag handle class is draggable and secondly it doesn’t automatically add the cursor: move
+style to the row (or the drag handle cell), so you are responsible for setting up the style as you see fit.
+
+Here I’ve actually added an extra effect which adds a background image to the first cell in the row whenever
+you enter it using the jQuery hover function as follows:
+
+    $("#table-5 tr").hover(function() {
+          $(this.cells[0]).addClass('showDragHandle');
+    }, function() {
+          $(this.cells[0]).removeClass('showDragHandle');
+    });
+This provides a better visualisation of what you can do to the row and where you need to go to drag it (I hope).
+
+Version History
+0.2	2008-02-20	First public release
+0.3	2008-02-27	Added onDragStart option
+Made the scroll amount configurable (default is 5 as before)
+0.4	2008-03-28	Fixed the scrollAmount so that if you set this to zero then it switches off this functionality
+Fixed the auto-scrolling in IE6 thanks to Phil
+Changed the NoDrop attribute to the class “nodrop” (so any row with this class won’t allow dropping)
+Changed the NoDrag attribute to the class “nodrag” (so any row with this class can’t be dragged)
+Added support for multiple TBODYs–though it’s still not perfect
+Added onAllowDrop to allow the developer to customise this behaviour
+Added a serialize() method to return the order of the rows in a form suitable for POSTing back to the server
+0.5	2008-07-11	Now supports having a column as a drag handle (specify a class for the dragHandle option when configuring).
+Improved the serialize method to use a default (but also settable in the options) regular expression for generating the serialized string. The default is /[^\-]*$/ which will remove everything before a final hyphen, so item-s1 becomes s1.
+
+Added $(‘…’).tableDnDUpdate() to cause the table to update its rows so the drag and drop functionality works if, for example, you’ve added a row.
+
+Added $(‘…’).tableDnDSerialize() which allows you to serialize a table from any javascript code.
+
+Removed remaining $ and replaced with jQuery so that it should work with Prototype and Scriptaculous
+
+Tags: Drag & Drop, Javascript, jQuery, Web
+
+This entry was posted on Wednesday, February 20th, 2008 at 7:04 pm by DenisH	 and is filed under Articles, Javascript, Web development, jQuery. You can follow any responses to this entry through the RSS 2.0 feed. You can leave a response, or trackback from your own site.
+
+705 Responses to “Table Drag and Drop JQuery plugin”
+« Older Comments
+	 Rafaela Ramos says:
+October 28, 2011 at 12:26 pm
+Good day ..
+
+I wonder if you can apply to move
+the columns of the table and not the lines, eg I have a table that serves as
+a schedule where each column has a different time, I would like
+was possible to change the time just click and drag.
+
+Reply
+	 Chuck says:
+October 28, 2011 at 12:36 pm
+I am using this in an application which enables users to change the order of routing for an agreement and if the route has already started, for example, and the first two “stops” on the route have been completed, I have added the noDrag and noDrop class to that route (table row) so that the user cannot change that part of the route. However, the user is still able to make changes to the incomplete part of the route. The problem is that the noDrop does not prevent the user from dragging a route and inserting it (dropping it) anywhere they want. BTW, I have to show all of the steps to the route, I can’t just not display them. I thought the whole purpose of the noDrop was to prevent this. Let me know if there is a fix to this available or if you have any suggestions. Also, I can’t use any classes, other than the ones for controlling the drag and drop, within the table. How come? Thanks
+
+Reply
+	 tom says:
+November 1, 2011 at 5:23 am
+For me to use this plugin I needed a few things fixed, and I’ve seen in the comments here some things that other people wanted fixed, so I’ve done an update. I’d be pleased if the plugin maintainer would take this and run with it. Available from http://riouxsvn.com/svn/jquery-tablednd/trunk/. Tested on recent IE, FF, Chromium, Opera, but probably works properly on older browsers too. Documentation in the .js file, as before.
+Changes:
+Added _real_ support for multiple elements in a table
+Added support for multi-selection (only for jQuery >= 1.4 and browsers that provide dblclick events)
+Reduced no. of events processed
+Added support for specific buttons and modifier-states
+Tolerate pointer ‘jiggle’ e.g. from in-cell click, without triggering a drag
+Un-dragged rows classed “nodrop” treated as “fixed position”, regardless of where drop occurs
+During drags, apply onDragStyle (if it exists) before, not instead of, onDragClass if that exists
+Added support for onRowsChanged callback
+Improved browser compatibility
+Added missing default onAllowDrop
+Removed unused default serializeParamName
+Removed redundant scrollAmount parameter
+Removed redundant updateTables()
+
+Reply
+	 Jeremy says:
+November 22, 2011 at 10:26 pm
+Would love your changes (esp multiple tbody support), but that link to the source doesn’t work. Could you provide a new link please. Thanks.
+
+Reply
+	 tom says:
+November 1, 2011 at 5:26 am
+Edit previous comment:
+Added _real_ support for multiple <tbody> elements in a table
+
+Reply
+	 Larry says:
+November 2, 2011 at 11:55 pm
+Wondering if this is still in development. I needed functionality for clicking on a row as well as dragging a row so I added an onClick handler to the code. It requires multiple changes so it’s difficult to post what the changes to the code are, but it would be nice to add this to the official version.
+
+Reply
+	 DenisH says:
+November 3, 2011 at 9:37 am
+Hi Larry, I don’t have any time at the moment to do development, but I’ve made a TableDnD repository at GitHub so that people can add their enhancements. Please feel free to add your updates there. If I get time I’ll try and incorporate all the other improvements that people have come up with. You can also join the Cloud9 TableDnD project.
+
+Reply
+	 Alex says:
+November 3, 2011 at 12:59 pm
+I was having problems using this on a heavily customised page and found a check for nullity on e.firstChild fixed a number of issues
+
+        /** Safari fix -- thanks to Luis Chato for this! */
+        if (e.offsetHeight == 0) {
+            /** Safari 2 doesn't correctly grab the offsetTop of a table row
+            this is detailed here:
+            http://jacob.peargrove.com/blog/2006/technical/table-row-offsettop-bug-in-safari/
+            the solution is likewise noted there, grab the offset of a table cell in the row - the firstChild.
+            note that firefox will return a text node as a first child, so designing a more thorough
+            solution may need to take that into account, for now this seems to work in firefox, safari, ie */
+            if (e.firstChild) {
+                e = e.firstChild; // a table cell
+            }
+        }
+Reply
+	 Pankaj says:
+November 28, 2011 at 5:26 am
+Hi,
+Thanks for this great plug-in. This has all the necessary features but sadly it does not work in Chrome.
+
+If “jQuery” in plugin is changed to “$”( just like all other jquery plugins), it works in Chrome as well.
+
+Hope you would integrate this change.
+
+Reply
+	 Bill says:
+November 29, 2011 at 5:50 pm
+How do I make the database save changes after my rows have been re-ordered? I found plenty of info for saving re-ordered lists but haven’t been able to find anything for tables. I’m using ColdFusion and so far everything works except for any changes I make by moving rows. Thanks.
+
+Reply
+	 DenisH says:
+November 30, 2011 at 10:02 am
+Bill,
+
+If you look at the section above called “What to do afterwards?” it explains how you can use serialise() to notify the server using Ajax. The code I use is as follows:
+
+	$('#table-3').tableDnD({
+	    onDrop: function(table, row) {
+	        alert("Result of $.tableDnD.serialise() is "+$.tableDnD.serialize());
+		$('#AjaxResult').load("/articles/ajaxTest.php?"+$.tableDnD.serialize());
+        }
+	});
+As you can see, it’ very easy, All I do is call $('#AjaxResult').load("..") and this replaces the contents of that div with the results returned by the server. The URL that I generate has the serialised IDs in a form that works well for PHP. The PHP source for my test page is:
+
+The server says: your row order was<br/>
+<?php
+$result = $_REQUEST["table-3"];
+foreach($result as $value) {
+	echo "$value<br/>";
+}
+?>
+Reply
+	 Bill says:
+November 30, 2011 at 4:24 pm
+Thanks Denis but it’s not working for me. I only have one table row Id as the code is looping through the database for other records.
+
+Untitled Document
+
+<!– Add in the jQuery draggability –>
+
+$(document).ready(function() {
+// Initialise the table
+$(“#table-1?).tableDnD();
+});
+
+$(document).ready(function() {
+// Initialise the table
+$(‘#table-1').tableDnD({
+onDrop: function(table, row) {
+alert(“Result of $.tableDnD.serialise() is “+$.tableDnD.serialize());
+$(‘#AjaxResult’).load(“test.php?”+$.tableDnD.serialize());
+}
+});
+
+The server says: your row order was
+<?php
+$result = $_REQUEST["table-1"];
+foreach($result as $value) {
+echo "$value”;
+}
+?>
+
+<!– http://www.isocra.com/2008/02/table-drag-and-drop-jquery-plugin/ –>
+
+ID
+Rank
+Text
+Listing ID
+
+Reply
+	 Romedix says:
+December 1, 2011 at 4:58 pm
+HI, Thanks a lot, I was looking this time ago.
+
+I would like to know how I make it work on an IPAD or IPhone.
+
+I’ll be expecting for your answer.
+
+Bye
+
+Reply
+	 DenisH says:
+December 2, 2011 at 8:42 am
+Hi Romedix, I only got hold of an iPad this week so hadn’t been able to test it until now. The problem is that the events you need to trap are different for iPad/iPhone/iPod (possibly Android too?). Dan Wellman shows how to fix jQuery code to work with an iPad and you could use those ideas to modify the TableDnD code. If you do, then please use our GitHub repository to add your changes.
+
+Good luck!
+
+Reply
+	 DenisH says:
+December 2, 2011 at 8:24 pm
+Hi again Romedix, in fact now that I’ve got this iPad I decided to have a go at enhancing the plug-in. Here’s the latest version github.com/isocra/TableDnD/blob/master/js/jquery.tablednd.js.
+
+I haven’t had time to integrate it with this blog posting, so the examples above won’t work with touch devices, but if you download everything from GitHub it should work fine.
+
+Reply
+	 z says:
+December 26, 2011 at 5:40 pm
+No work on iPad =/
+
+Reply
+	 z says:
+December 26, 2011 at 6:16 pm
+i try u script on a simple appl, and no work. i can´t change order.
+Can u help me?
+
+i download the all source, but no work yet
+
+	 ganesh says:
+December 2, 2011 at 6:32 am
+Hi i got very very useful trick from this..
+thank so much providing this…
+my photo ordering was done very easily..
+thank u so much.. 
+
+Reply
+	 Andrew says:
+December 11, 2011 at 11:45 pm
+Hello,
+From my brief testing it doesn’t appear to support tables with a rowspan column attribute. For example:
+
+HeaderDetails1Details2
+Details3Details4
+
+In this example I expected that dragging the first column would drag two rows of the table together. Although I imagine this is not a trivial feature to implement, do you think it’s a valid case?
+
+Reply
+	 Florian says:
+December 19, 2011 at 10:21 am
+Hy i found a bug->
+
+
+        var rows = table.rows; //getElementsByTagName("tr")
+-> only tbody tr –>
+
+        var rows = table.tBodies[0].rows; //getElementsByTagName("tr")
+Reply
+« Older Comments
+Leave a Reply
+  Name (required)
+ Mail (will not be published) (required)
+ Website
+
+
+ 
+site navigation
+Home
+Consultancy
+Training
+Articles
+Tools
+Blogs
+       
+ If you find an article useful, then please make a donation.
+Book of the month
+
+The Definitive Guide to Grails 2nd Edition (Expert's Voice in …
+Graeme Rocher, Jeff B…
+£35.14
+Privacy
+home consultancy training articles blogs
+Copyright © 1998-2010, Isocra Consulting Ltd. All rights reserved. terms &conditions | privacy policy

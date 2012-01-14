@@ -1,0 +1,1 @@
+<? session_start();if(!session_is_registered(email_id)){header("location:index.php");}?><html><body>Login Successful</body></html>

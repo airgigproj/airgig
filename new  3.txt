@@ -1,0 +1,903 @@
+
+The Laboratory
+About
+Products
+Product News
+
+
+JUL
+7
+Sortable Lists Using jQuery UI
+jQuery
+
+
+
+Unordered lists have a number of useful applications.  They are commonly used to structure a site’s navigation.  I have found, in a number of web applications, that the ability to reorder (sort) such lists would be extremely useful.  So, how can this be achieved?
+
+I’m a big fan of the jQuery library.  Since most of the applications I build use jQuery, developing with this library would be the most logical approach.  But wait…  It looks like there are 2 jQuery plugins that allow elements to be sorted.  These are the jQuery Interface plugin and jQuery UI.
+
+At first, I started working with “Interface”.  I soon ran into problems as I started working with styled lists.  For some reason, the list elements lost their styling as they were being dragged.  I just couldn’t quite put my finger on the problem - perhaps I missed something.  I then started working with jQuery UI.  This plugin retained the styling - perfect!
+
+However, neither of these plugins provide a method to easily save and reload the list element order.  Hence, should a user change the order of the list, these changes would be lost as the page is refreshed.
+
+
+
+Saving the Reordered List
+
+I determined that the easiest way to accomplish this is through the use of a cookie.  The jQuery UI plugin already allows you to send the ID’s of the list elements (in order) to an array.  Using Klaus Hart’s Cookie plugin, we can easily save the list element order to a cookie.  But how do we retain/reload the element order saved to the cookie?
+
+To restore the element order, I decided to remove all the sortable list elements from the DOM and then immediately append them to their parent element (in the order sepcified by the cookie).  This is all done after the document has loaded.
+
+The HTML Markup
+
+<ul id="list1">
+<li id="item-1">List Item 1</li>
+<li id="item-2">List Item 2</li>
+<li id="item-3">List Item 3</li>
+<li id="item-4">List Item 4</li>
+<li id="item-5">List Item 5</li>
+<li id="item-6">List Item 6</li>
+</ul>
+The Javascript
+
+/////////////////////////////////////////////////////////////////
+/////  EDIT THE FOLLOWING VARIABLE VALUES  //////////////////////
+/////////////////////////////////////////////////////////////////
+ 
+// set the list selector
+var setSelector = "#list1";
+// set the cookie name
+var setCookieName = "listOrder";
+// set the cookie expiry time (days):
+var setCookieExpiry = 7;
+ 
+/////////////////////////////////////////////////////////////////
+/////  YOU PROBABLY WON'T NEED TO EDIT BELOW  ///////////////////
+/////////////////////////////////////////////////////////////////
+ 
+// function that writes the list order to a cookie
+function getOrder() {
+	// save custom order to cookie
+	$.cookie(setCookieName, $(setSelector).sortable("toArray"), { expires: setCookieExpiry, path: "/" });
+}
+ 
+// function that restores the list order from a cookie
+function restoreOrder() {
+	var list = $(setSelector);
+	if (list == null) return
+ 
+	// fetch the cookie value (saved order)
+	var cookie = $.cookie(setCookieName);
+	if (!cookie) return;
+ 
+	// make array from saved order
+	var IDs = cookie.split(",");
+ 
+	// fetch current order
+	var items = list.sortable("toArray");
+ 
+	// make array from current order
+	var rebuild = new Array();
+	for ( var v=0, len=items.length; v<len;>
+		rebuild[items[v]] = items[v];
+	}
+ 
+	for (var i = 0, n = IDs.length; i &lt; n; i++) {
+ 
+		// item id from saved order
+		var itemID = IDs[i];
+ 
+		if (itemID in rebuild) {
+ 
+			// select item id from current order
+			var item = rebuild[itemID];
+ 
+			// select the item according to current order
+			var child = $("ul.ui-sortable").children("#" + item);
+ 
+			// select the item according to the saved order
+			var savedOrd = $("ul.ui-sortable").children("#" + itemID);
+ 
+			// remove all the items
+			child.remove();
+ 
+			// add the items in turn according to saved order
+			// we need to filter here since the "ui-sortable"
+			// class is applied to all ul elements and we
+			// only want the very first!  You can modify this
+			// to support multiple lists - not tested!
+			$("ul.ui-sortable").filter(":first").append(savedOrd);
+		}
+	}
+}
+ 
+// code executed when the document loads
+$(function() {
+	// here, we allow the user to sort the items
+	$(setSelector).sortable({
+		axis: "y",
+		cursor: "move",
+		update: function() { getOrder(); }
+	});
+ 
+	// here, we reload the saved order
+	restoreOrder();
+});
+There are 2 functions to be concerned with in the above code.  The first, “getOrder()”, writes the order of the list elements to a cookie.  The second, “restoreOrder()”, fetches the order saved to the cookie and restores that order.  We execute “getOrder()” each time the list order is changed.  We execute “restoreOrder()” after the document has loaded.
+
+Using the code provided above, you should only need to change the variables (at the very top) to get this working with your page.  Just remember to include the jQuery library and jQuery UI plugin!  I hope this is helpful!
+
+
+
+Delicious
+Digg This
+Stumbleupon
+Float
+Animated Menus Using jQuery...
+Cookies With jQuery - Designing...
+Text Resizing With jQuery...
+Sortable Lists Using jQuery UI...
+jQuery From Scratch: jQuery...
+jQuery From Scratch: Functions...
+Password Strength Meter...
+jQuery From Scratch: A...
+Password Strength Meter...
+jQuery From Scratch: jQuery...
+jQuery From Scratch: Functions...
+Sortable Lists Using jQuery UI...
+Sortable Widgets Wordpress...
+  
+
+
+D. Carreira 
+July 8, 2008 
+Quote 
+Nice tutorial! I’m using every day a little more of jQuery. It’s fantastic to learn and very simple to use.
+Thanks,
+David Carreira
+
+R.J. Steinert 
+July 15, 2008 
+Quote 
+Pretty good script. Just one suggestion.
+If you want your to contain more than just text you’ll have to set savedOrd to something like this:
+var savedOrd = “” + $(’#’ + itemID).html() + “”;
+There is probably a more elegant solution to this (so we don’t have to build the tag ourselves). I’m hoping someone replies with the answer. I’m guessing .children() has an issue when the child has children. This is a legacy function anyways (http://docs.jquery.com/API/1.1.1/DOM/Traversing).
+
+JimC 
+July 18, 2008 
+Quote 
+Is there an object oriented way to use this script? In cases, such as when there are 2 columns of sortable items?
+
+Homar 
+July 18, 2008 
+Quote 
+Is there an object oriented way to use this script? In cases, such as when there are 2 columns of sortable items?
+
+jQuery UI does allow you to connect 2 lists - so it certainly is possible. However, I would need to rework some of the code.
+
+JimC 
+July 18, 2008 
+Quote 
+jQuery UI does allow you to connect 2 lists - so it certainly is possible. However, I would need to rework some of the code.
+
+Thanks. To clarify — I’m trying to sort 2 columns separately. Items from Column 1 don’t need to mix with Column 2 items. Is it an easier to use this script with 2 separate columns?
+Appreciate the help. New to JS and have been working hours on this one.
+
+Homar 
+July 18, 2008 
+Quote 
+The code would still need to be reworked due to the selectors used. jQuery UI adds the “ui-sortable” class to each list. In the code, we select this class:
+$("ul.ui-sortable")
+If there are 2 lists, the function will select both lists instead of working with each list separately. To get this working, you would probably need to pass the selector as a parameter of the function.
+You would also need to write something like this for each list:
+$(setSelector).sortable({
+	axis: "y",
+	cursor: "move",
+	update: function() { getOrder(); }
+});
+
+JimC 
+July 18, 2008 
+Quote 
+That was it! The code needed to know which ID to update. In the FOR loop, I changed 3 references to $(”ul.ui-sortable”) to $(”ul” + setSelector + “.ui-sortable”).
+Not sure if this abstracts well, but the 2 columns are now sorting and remembering correctly. Appreciate the help.
+
+Baxter 
+August 25, 2008 
+Quote 
+Can this be used outside of a list? In my particular case, I’ve got
+…stuff…
+…stuff…
+…stuff…
+…stuff…
+I know when I put it that way, it looks like it should be a list, but each .module holds a table and it’s really a bit much for a UL… and there may be constraints on the current structure I’m not aware of. Anyways, what I want is to order the .module divs.
+
+Baxter 
+August 25, 2008 
+Quote 
+ <div id="content-main">
+   <div class="module">...stuff...</div>
+   <div class="module">...stuff...</div>
+   <div class="module">...stuff...</div>
+</div>
+
+Baxter 
+August 25, 2008 
+Quote 
+Nevermind. I hadn’t put an id on the children. Feel free to delete comments.
+
+Homar 
+August 25, 2008 
+Quote 
+Nevermind. I hadn’t put an id on the children. Feel free to delete comments.
+
+Hi Baxter!
+Is it working now?
+
+Erik 
+August 27, 2008 
+Quote 
+Hi! FF3 Firebug throws me an error for the line:
+for ( var v=0, len=items.length; v
+Isn’t there a ) missing?
+
+Homar 
+August 27, 2008 
+Quote 
+Hi! FF3 Firebug throws me an error for the line:
+for ( var v=0, len=items.length; v
+Isn’t there a ) missing?
+
+Hi Erik! Sorry about that. It looks like Wordpress has fiddled with the code. I’ll sort this out and post again when it’s fixed. If you need it now, check out the source code for the demo.
+
+Erik 
+August 27, 2008 
+Quote 
+Hey! Works like a charm! Thx a lot for the very fast help!!!
+
+BT5 
+September 10, 2008 
+Quote 
+I love your script.. but i need help with something.. I need it to work in 3 columns. example: colum 3 div can move to column 1 div. and then save a cookie of the movement then on page reload the order is kept the same? Any ideas?
+
+Homar 
+September 10, 2008 
+Quote 
+I love your script.. but i need help with something.. I need it to work in 3 columns. example: colum 3 div can move to column 1 div. and then save a cookie of the movement then on page reload the order is kept the same? Any ideas?
+
+jQuery UI does allow you to connect several unordered lists (http://docs.jquery.com/UI/Sortables). However, I don’t think that this code is capable of inserting each list item in the order stored in the cookie. It will of course be possible to do this. However, I fear that my JavaScript knowledge will let me down.
+
+Saliem 
+December 26, 2008 
+Quote 
+nifty. i’m going to try this. 
+
+Kris 
+January 29, 2009 
+Quote 
+Big ups!
+Can anyone tell me, how to modify this script or find something like set up on: http://www.bbc.co.uk ?
+I don’t need the select field with the dashed line around anyway. Just the effect, that there are several colums in several rows and then insert an new postion. Anyway get a clue?
+thx!
+Kris
+
+Kwynns 
+February 3, 2009 
+Quote 
+I am looking at doing a 3 col like BT5…where divs can be moved between each col…can anyone point me in the right direction to set this up to save to a cookie?
+feel free to email me a kelseywynns (at) gmail.com
+
+Katie 
+February 4, 2009 
+Quote 
+Hi,
+Thanks for this article. I am using 2 columns and s, I can get the cookie to write but its in one long string. I’m not sure how to define where my setSelector ends and setSelector2 starts. Any help would be much appreciated.
+Katie
+
+Katie 
+February 5, 2009 
+Quote 
+sorted it, no worries
+Katie
+
+Sebastian 
+February 12, 2009 
+Quote 
+Is there a way to disable a particular list item so it’s NOT draggable?
+
+Permana Jayanta 
+February 13, 2009 
+Quote 
+This is what I’m looking for … thanks …
+
+Permana Jayanta 
+February 13, 2009 
+Quote 
+I just give it a try but I think it only work with jquery 1.2.6 because when I try using bersion 1.3.1.min, it didn’t work … Maybe I missed something ..?
+And also, it didn’t work with div …
+I have the HTML :
+First
+Second
+Third
+What should I do so it work with div too? I don’t really understand javascript …
+
+Gimly 
+February 18, 2009 
+Quote 
+hi and thx alot for that tutorial! i use it with 2 columns and divs (not lists) and it’s working fine. i got some problems in the beginning, cause i forgot to place ids on all the divs and all i was getting was empty strings, but thx to Baxter i succeeded.
+
+Xeyo 
+February 26, 2009 
+Quote 
+Great tutorial!! Thanks a lot.
+I managed to use the tutorial to create a page with 3 columns (with divs). And cookies are storing the data within the each column however if I move the divs from one column to another cookies don’t work!!
+It looks like it doesn’t update the list properly…
+ANY IDEAS?
+(I’ve changed the code a bit and add up JimC’s solution. I can post it if you like or e-mail….)
+
+Lau 
+March 1, 2009 
+Quote 
+Hi, I wonder how to add a function delete the cookie which you have save on this page.
+I tried this, but it wont work,
+###########
+function deleteCookies() {
+$.cookie(’listOrder’, null);
+}
+reset
+###########
+Also, I wonder how to use this cookie function with the jquery portlets,
+http://jqueryui.com/demos/sortable/portlets.html
+Many thanks,
+Lau
+
+Bartosz 
+March 3, 2009 
+Quote 
+Thanks a lot for your tutorial. it finally pointed me in the right direction. I just have the same issue like the guys before me: i would like to link one column to another, but the cookie won’t save changes between the columns. anyone an idea?
+
+Matt 
+March 4, 2009 
+Quote 
+I couldn’t get this to work with jquery 1.3.1, am i missing something or does it only work with 1.2.6?
+Thanks
+
+Caleb 
+March 13, 2009 
+Quote 
+Hi there,
+I am in the same boat as few others, I need to save the order for two columns. The items can be sorted between the columns, so I need to save the orders within the columns as well as which column each item is in… Any ideas anyone? Help would be a lifesaver 
+These can all…
+be sorted between…
+columns as…
+well as…
+within them.
+
+Caleb 
+March 13, 2009 
+Quote 
+Sorry…
+These can all…
+be sorted between…
+columns as…
+well as…
+within them.
+
+Caleb 
+March 13, 2009 
+Quote 
+Okay I can’t use the pre tags. But you get the idea.
+
+Dave 
+March 31, 2009 
+Quote 
+Can this be tweaked so that when one of the is clicked it moves to the top of the list and expands. What I am looking for is to use this for site navigation but resort navigation items so that the currently selected item is always the first in the list?
+Thanks
+
+DG 
+April 1, 2009 
+Quote 
+you are the best.I was looking some thing like this
+I will definitely try this.
+
+Dgupta 
+April 2, 2009 
+Quote 
+looks like v1.3.2 of jquery doesn’t like sortables/ ..
+i just update the jquery version from 1.2.6 to 1.3.2 …it stop working 
+
+Kid 
+April 14, 2009 
+Quote 
+Can anyone tell me how you guys did to make this work with multiple (two, not connected) lists?
+How do I initialize the two different lists? Could anyone please give me an example or a hint in the right direction?
+Thanks.
+
+Callaway 
+April 22, 2009 
+Quote 
+Any ideas how to fix this awesome script to work with jQuery 1.3?
+
+Boris 
+April 22, 2009 
+Quote 
+Hello my friends!
+how to move up/down menu from free with jquery
+PHP MYSQL
+db_table
+id parent name
+1 0 main page
+2 0 About us
+How move row with +1/-1??
+Thanks for advice
+
+Dave 
+May 6, 2009 
+Quote 
+great stuff, thanks
+the list seems to have padding to the left of about 50px and I can’t figure out why that is, when I try to force it over it screws up the sorting somewhat. any help on this is appreciated.
+thanks!
+
+Dave 
+May 6, 2009 
+Quote 
+nevermind, just found a hack forcing the ul over instead of the li
+
+Khan 
+June 6, 2009 
+Quote 
+Thanks You have solved my problem
+
+Michael Thomas 
+June 23, 2009 
+Quote 
+Fantastic little tutorial, I can’t wait to use this in a website, obviously it would have to be the right website to use this. Does any one know if this effects SEO on a website?
+
+Many 
+June 23, 2009 
+Quote 
+Thanks You have solved my problem
+
+Gercek 
+June 26, 2009 
+Quote 
+This is not working with jQuery 1.3.2
+
+Andy 
+July 7, 2009 
+Quote 
+thank you for sharing your thought and idea, that’s exactly what i am looking for. just wondering how to do it with database instead of cookie
+cheers
+
+Proton 
+July 25, 2009 
+Quote 
+How to use this with the multiple columns?
+
+Tim 
+August 12, 2009 
+Quote 
+Nice , how would i get it to save after browser close?
+
+Juno 
+September 29, 2009 
+Quote 
+Really nice plugin, but how do i actually retrieve the values from the cookie and store them into a sql server database?
+I want users to change the order of a menu, f.e:
+Menuitem 1
+Menuitem 2
+Menuitem 3
+Menuitem 4
+Each Menuitem has a record in the db and an unique ID.
+Each Menuitem has a field called “Order” in the database.
+How do i read the cookie, split the values and store them into the right record into the “Order” field?
+So: update menutable set order = where menuID = .
+Is that possible?
+Thanks in advance.
+
+Jorge Lainfiesta 
+October 23, 2009 
+Quote 
+Hi there,
+I’d like to know if there’s some way to use this clever script with jQuery 1.3.2 and jQuery UI 1.7.2? I tried to use the same, but it didn’t work.
+Thanks in advance,
+Jorge Lainfiesta
+
+Lars E 
+December 4, 2009 
+Quote 
+Like Juno I need to know how to save the changes into a database…
+Can’t wait to hear form anybody who might know how to do that…
+
+Pelupa.Com 
+December 7, 2009 
+Quote 
+@Lau
+[code]$.cookie(setCookieName, null, { expires: setCookieExpiry, path: “/” });[/code]
+
+John 
+December 29, 2009 
+Quote 
+Thanks, this is great stuff. One small change on your reorder code however if you want to keep any events wired that are in the li element.
+var savedOrd = $(”ul.ui-sortable”).children(”#” + itemID);
+—> changed to —>
+var savedOrd = $(”ul.ui-sortable”).children(”#” + itemID).clone(true);
+
+Konst 
+January 4, 2010 
+Quote 
+Updated version below for unlimited # of columns
+function getOrder() {
+// save custom order to cookie
+var pos = [];
+$jq(setSelector).each(function(){	pos.push($jq(this).sortable(”toArray”));	})
+$jq.cookie(setCookieName, pos.join(”|”), { expires: setCookieExpiry, path: “/” });
+}
+function restoreOrder() {
+// fetch the cookie value (saved order)
+var cookie = $jq.cookie(setCookieName);	if (!cookie) return;
+var colms = cookie.split(”|”);
+var allitems = new Array();
+$jq(setSelector).each(function(){
+var list = $jq(this); if (list == null) return
+// make array from saved order
+var IDs = colms.shift().split(”,”);
+// fetch current order
+var items = list.sortable(”toArray”);
+// make array from current order
+for ( var v=0, len=IDs.length; v0){
+allitems.push($jq(”div.ui-sortable”).children(”#” + IDs[v]));
+$jq(”div.ui-sortable”).children(”#” + IDs[v]).remove();
+}
+}
+})
+var colms = cookie.split(”|”);
+$jq(setSelector).each(function(){
+//var list = $jq(setSelector);
+var list = $jq(this); if (list == null) return
+// make array from saved order
+var IDs = colms.shift().split(”,”);
+// fetch current order
+var items = list.sortable(”toArray”);
+// make array from current order
+var rebuild = new Array();
+for ( var v=0, len=IDs.length; v<len; v++ ){
+list.append(allitems.shift());
+}
+})
+}
+
+Ralcus 
+January 12, 2010 
+Quote 
+At first, I started working with “Interface”. I soon ran into problems as I started working with styled lists. For some reason, the list elements lost their styling as they were being dragged. I just couldn’t quite put my finger on the problem - perhaps I missed something.
+
+I came across this problem when i was working with another javascript sortables plugin, in the end it was because i was hanging hooks on the id’s of the draggable items.
+It’s confusing but i think it goes like this: as soon as you pick up a draggable item it’s not really picking it up it’s creating a cuplicate, this duplicate doesnt have the id of the original so the stylings drop. I go around this by hanging my styles on class names instead.
+I guess jquery ui has some crafty code in to get around this problem.
+
+Murtaza 
+February 26, 2010 
+Quote 
+Hello,
+I am A developer and i used yours Sortable plug-in. It was working fine. But My boss demanded to float the divs with different width and height and then apply ui.sortable to them.
+He also said me to make it like google when on just on the touch to other div border, sorting starts.
+But when i made the divs float with different sizes, and applied sortable on them. We noticed that we had to move any box all over the other box in order to sort them. Sometimes it becomes very difficult to sort the boxes from left to right.
+My Questions are:
+1: How can i make two widgets or boxes sortable by keeping them as float just on touching the boundaries of the each from left, right, bottom or top? Means to say, instead of entirely overlapping each other widget, the widgets must swap or sorted just on a little contact from any direction by keeping their floating position intact.
+2: How can i attach the place-holder and apply forceplaceholder property with floating widgets or divs?
+Please reply me asap.
+Regards
+Murtaza
+
+Web Design Barnsley 
+March 12, 2010 
+Quote 
+Yer, i just done something like this and works very well nice tut though and bookmarked just in case 
+
+Dotwired 
+March 19, 2010 
+Quote 
+Hi, will there be a update for jQuery 1.4+ and jQueryUI 1.8+? This would be awesome…
+
+Aaron 
+April 5, 2010 
+Quote 
+Wow, thanks! This works just great, I have used it on my front page of my web site, and it works a treat across all browsers. Its working with jQuery 1.4.2, I didnt need to modify anything. The only extra was to download the jQuery Cookie plugin as well.
+
+X;Ls -L;Dir; 
+May 20, 2010 
+Quote 
+0
+
+Anonymous 
+May 20, 2010 
+Quote 
+0
+
+X' Waitfor Delay '0:0:20'-- 
+May 20, 2010 
+Quote 
+0
+
+Anonymous 
+May 25, 2010 
+Quote 
+your comment…
+
+Dave Keltz 
+June 25, 2010 
+Quote 
+I know this topic is rather old however in the event someone else stumbles along this page wanting to do what I wanted to do (use this script with more than 1 list) then here is the code to do exactly that. One thing I should note is that I am not mixing items between list so if you are needing that functionality then this update will not help you but if you just want to have more then 1 list and sort and save items in each list then this is the code for you…
+The Code:
+/////////////////////////////////////////////////////////////////
+///// EDIT THE FOLLOWING VARIABLE VALUES //////////////////////
+/////////////////////////////////////////////////////////////////
+// set the cookie expiry time (days):
+var setCookieExpiry = 7;
+/////////////////////////////////////////////////////////////////
+///// YOU PROBABLY WON’T NEED TO EDIT BELOW ///////////////////
+/////////////////////////////////////////////////////////////////
+function sorter(setSelector, setCookieName) {
+// function that writes the list order to a cookie
+function getOrder() {
+// save custom order to cookie
+$.cookie(setCookieName, $(setSelector).sortable(”toArray”), { expires: setCookieExpiry, path: “/” });
+}
+// function that restores the list order from a cookie
+function restoreOrder() {
+var list = $(setSelector);
+if (list == null) return
+// fetch the cookie value (saved order)
+var cookie = $.cookie(setCookieName);
+if (!cookie) return;
+// make array from saved order
+var IDs = cookie.split(”,”);
+// fetch current order
+var items = list.sortable(”toArray”);
+// make array from current order
+var rebuild = new Array();
+for ( var v=0, len=items.length; v<len; v++ ){
+rebuild[items[v]] = items[v];
+}
+for (var i = 0, n = IDs.length; i < n; i++) {
+// item id from saved order
+var itemID = IDs[i];
+if (itemID in rebuild) {
+// select item id from current order
+var item = rebuild[itemID];
+// select the item according to current order
+var child = $(list).children(”#” + item);
+// select the item according to the saved order
+var savedOrd = $(list).children(”#” + itemID);
+// remove all the items
+child.remove();
+// add the items in turn according to saved order
+// we need to filter here since the “ui-sortable”
+// class is applied to all ul elements and we
+// only want the very first! You can modify this
+// to support multiple lists - not tested!
+$(list).filter(”:first”).append(savedOrd);
+}
+}
+}
+// code executed when the document loads
+$(function() {
+// here, we allow the user to sort the items
+$(setSelector).sortable({
+axis: “y”,
+opacity: “0.8?,
+revert: “true”, //bouncy animation effect can be turned off.
+handle: “.handle”,
+placeholder: “placeholder”,
+forcePlaceholderSize: “true”,
+update: function() { getOrder(); }
+});
+// reload the saved order
+restoreOrder(setSelector);
+})
+};
+$(document).ready(function() {
+sorter(’#list1', ‘listOrder-list1');
+sorter(’#list2', ‘listOrder-list2');
+//etc…
+});
+The Html Markup
+List Item 1
+List Item 2
+List Item 3
+List Item 4
+List Item 5
+List Item 6
+List Item 1
+List Item 2
+List Item 3
+List Item 4
+List Item 5
+List Item 6
+etc…
+
+Dave Keltz 
+June 25, 2010 
+Quote 
+The pre code does not seem to be working will try again in separate post. Here is the JavaScript you need to use.
+/////////////////////////////////////////////////////////////////
+///// EDIT THE FOLLOWING VARIABLE VALUES //////////////////////
+/////////////////////////////////////////////////////////////////
+// set the cookie expiry time (days):
+var setCookieExpiry = 7;
+/////////////////////////////////////////////////////////////////
+///// YOU PROBABLY WON’T NEED TO EDIT BELOW ///////////////////
+/////////////////////////////////////////////////////////////////
+function sorter(setSelector, setCookieName) {
+// function that writes the list order to a cookie
+function getOrder() {
+// save custom order to cookie
+$.cookie(setCookieName, $(setSelector).sortable(”toArray”), { expires: setCookieExpiry, path: “/” });
+}
+// function that restores the list order from a cookie
+function restoreOrder() {
+var list = $(setSelector);
+if (list == null) return
+// fetch the cookie value (saved order)
+var cookie = $.cookie(setCookieName);
+if (!cookie) return;
+// make array from saved order
+var IDs = cookie.split(”,”);
+// fetch current order
+var items = list.sortable(”toArray”);
+// make array from current order
+var rebuild = new Array();
+for ( var v=0, len=items.length; v<len; v++ ){
+rebuild[items[v]] = items[v];
+}
+for (var i = 0, n = IDs.length; i < n; i++) {
+// item id from saved order
+var itemID = IDs[i];
+if (itemID in rebuild) {
+// select item id from current order
+var item = rebuild[itemID];
+// select the item according to current order
+var child = $(list).children(”#” + item);
+// select the item according to the saved order
+var savedOrd = $(list).children(”#” + itemID);
+// remove all the items
+child.remove();
+// add the items in turn according to saved order
+// we need to filter here since the “ui-sortable”
+// class is applied to all ul elements and we
+// only want the very first! You can modify this
+// to support multiple lists - not tested!
+$(list).filter(”:first”).append(savedOrd);
+}
+}
+}
+// code executed when the document loads
+$(function() {
+// here, we allow the user to sort the items
+$(setSelector).sortable({
+axis: “y”,
+cursor: “move”,
+update: function() { getOrder(); }
+});
+// reload the saved order
+restoreOrder(setSelector);
+})
+};
+
+Dave Keltz 
+June 25, 2010 
+Quote 
+And the HTML Code.
+$(document).ready(function() {
+sorter(’#list1', ‘listOrder-list1');
+sorter(’#list2', ‘listOrder-list2');
+//etc…
+});
+List Item 1
+List Item 2
+List Item 3
+List Item 4
+List Item 5
+List Item 6
+List Item 1
+List Item 2
+List Item 3
+List Item 4
+List Item 5
+List Item 6
+
+Shiroi Neko 
+August 4, 2010 
+Quote 
+I will try to follow your tut.
+Thank you.
+
+James 
+August 13, 2010 
+Quote 
+That was so Kewl, this code worked out of box for portlets too. Thanks so much for the neat code and explanation 
+
+Steve 
+November 24, 2010 
+Quote 
+Hi,
+I really need help here, I been trying since 2 days and noluck, the problem is that I am trying to store the positions of Sortable Portlets (using cookie). (http://jqueryui.com/demos/sortable/#portlets) but it contains multi pule DIV tags to prepare rows and columns.
+The above mentioned code works with UL but no luck.
+Thanks in advance for your time.
+
+Mariano 
+May 14, 2011 
+Quote 
+Internet explorer 8 is not working
+
+Paritus 
+May 26, 2011 
+Quote 
+Thank you, so I need it for work.
+
+Nishihandha 
+September 28, 2011 
+Quote 
+I am using cookies to reorder the list, so ur application is working correctly, but i am adding some additional latest Jquery packs e.q(Jquery.ui.1.7.1) for another kind of functionality.
+So its giving me conflicts for two js file..
+one is jquery.min.1.2.7 and second is Jquery.ui.1.7.1.
+How to resolve this problem, can u plz help me on this.
+
+Anonymous 
+October 3, 2011 
+Quote 
+your comment…w
+
+Camilla 
+October 24, 2011 
+Quote 
+very useful, thanks!
+
+Robert 
+November 24, 2011 
+Quote 
+FWIW the following restoreOrder function works for me (jquery 1.6):
+function restoreOrder() {
+var i, old_order, cookie = $.cookie(setCookieName);
+if (!cookie) { return; }
+old_order = cookie.split(”,”);
+for (i = 0; i < old_order.length; i++) {
+$(’#'+old_order[i]).appendTo($(setSelector));
+}
+}
+
+Semanticblogger 
+December 5, 2011 
+Quote 
+best ul li list function using jquery.
+
+????? ???? 2012 
+December 22, 2011 
+Quote 
+Wow, thanks! This works just great, I have used it on my front page of my web site, and it works a treat across all browsers. Its working with jQuery 1.4.2, I didnt need to modify anything. The only extra was to download the jQuery Cookie plugin as well.
+
+
+ Name
+
+ Mail (will not be published)
+
+ Website
+
+
+
+
+
+<a href="http://www.mysite.com/">some site</a>
+<blockquote>quote</blockquote>
+<em>some emphasized text</em>
+<strong>some bold text</strong>
+<pre lang="">some code</pre>
+To add code to your comments, simply wrap the code inside <pre> tags. Syntax highlighting will be added if you define the language. Example: 
+<pre lang="php">some code</pre>
+
+Supported "lang" attribute values: html4strict, css, php, javascript, xml & mysql
+
+Copyright © 2008, ShopDev
+ 

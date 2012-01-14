@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html debug=true>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <title>Using Location To Address Geocoding Service</title>
+
+    <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=DioG219lPJG3WTn3zmQqebsjVg" type="text/javascript"></script>
+    <script src="http://serverapi.arcgisonline.com/jsapi/gmaps/?v=1.6" type="text/javascript" ></script>
+
+    <script type="text/javascript">
+
+      var gmap = null;
+      var locator = null;
+      var mapExtension = null;
+      var gOverlays = null;
+
+      function initialize() {
+        // GMap construction
+        gmap = new GMap2(document.getElementById('gmap'));
+        gmap.addMapType(G_NORMAL_MAP);
+        gmap.addMapType(G_SATELLITE_MAP);
+        gmap.addControl(new GLargeMapControl());
+        gmap.addControl(new GMapTypeControl());
+        gmap.setCenter(new GLatLng(34.06, -117.17), 12); // Redlands (Point)
+        gmap.enableScrollWheelZoom();
+
+        //Create MapExtension utility class
+        mapExtension = new esri.arcgis.gmaps.MapExtension(gmap);
+
+        // Locator
+        locator = new esri.arcgis.gmaps.Locator("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Locators/ESRI_Geocode_USA/GeocodeServer");
+
+        // You can execute a task and listen for the complete event or use the callback to get the results
+        GEvent.addListener(locator, "addressToLocationsComplete", function() {
+          //console.debug("locator task 'addressToLocationsComplete' event fired!!!");
+        });
+
+        GEvent.addListener(gmap, "click", function(marker, point) {
+          if(!marker){
+            mapExtension.removeFromMap(gOverlays);
+            locator.locationToAddress(point, 100, false, mycallback);
+          }
+        });
+
+      }
+
+      function mycallback(addressCandidate) {
+        // add the address result candidates to google map without any style
+        gOverlays = mapExtension.addToMap(addressCandidate);
+      }
+
+    </script>
+
+  </head>
+
+  <body onload="initialize();" onunload="GUnload();">
+  <table width="100%" height="100%">
+    <tr>
+      <td align="center">
+
+        <table>
+          <tr align="left">
+            <td>
+              Single Click on the map to find address. &nbsp; <input type="button" value="Clear Map Overlays" onclick="mapExtension.removeFromMap(gOverlays);" />
+            </td>
+          </tr>
+
+          <tr align="left" valign="top">
+            <td>
+              <div id="gmap" style="width: 500px; height:500px;"></div>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+  </body>
+</html>
